@@ -4,6 +4,8 @@ Gradio demo app  |  HF Spaces ready
 """
 
 import os
+os.environ["POLARS_SKIP_CPU_CHECK"] = "1"
+
 import gradio as gr
 from dotenv import load_dotenv
 
@@ -542,9 +544,9 @@ if __name__ == "__main__":
     # Preload local models to ensure instant inference with zero first-request lag
     local_weights = [m.path for m in MODEL_REGISTRY if m.kind == "local" and m.available]
     if local_weights:
-        print("⚡ Preloading local YOLOv8 model weights...")
+        print("[YOLO] Preloading local YOLOv8 model weights...")
         preload_models(local_weights)
-        print("✅ Models preloaded and ready!")
+        print("[YOLO] Models preloaded and ready!")
 
     app = build_app()
     app.queue()  # Enable Gradio queue for reliable websocket & long request handling
