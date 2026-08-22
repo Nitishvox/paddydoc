@@ -26,12 +26,29 @@ _cache_lock = threading.Lock()
 
 def load_model(path: str):
     """Return a cached YOLO instance, loading from disk only on first call."""
-    from ultralytics import YOLO  # lazy import — keeps startup fast
+    from ultralytics import YOLO  # lazy import
 
     with _cache_lock:
         if path not in _model_cache:
-            _model_cache[path] = YOLO(path)
+            m = YOLO(path)
+            # Warm up model with a tiny 64x64 dummy pass to initialize weights in memory
+            try:
+                dummy = Image.new("RGB", (64, 64))
+                m.predict(dummy, verbose=False)
+            except Exception:
+                pass
+            _model_cache[path] = m
     return _model_cache[path]
+
+
+def preload_models(paths: list[str]):
+    """Preload models in background or startup to eliminate first-request delay."""
+    for p in paths:
+        if p and os.path.exists(p) and os.path.getsize(p) > 0:
+            try:
+                load_model(p)
+            except Exception as e:
+                print(f"[YOLO] Warning: Failed to preload {p}: {e}")
 
 
 # ---------------------------------------------------------------------------

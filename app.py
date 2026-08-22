@@ -16,7 +16,7 @@ from config import (
     DEFAULT_CONF_THRESHOLD, DEFAULT_FRAME_STRIDE, MAX_VIDEO_FRAMES,
     MAX_RETRIES, REQUEST_TIMEOUT_SECONDS,
 )
-from models.yolo_handler import run_yolo_on_image, run_yolo_on_video
+from models.yolo_handler import run_yolo_on_image, run_yolo_on_video, preload_models
 from models.roboflow_handler import run_roboflow_api
 from utils.image_utils import (
     resize_for_display, format_detections_table, format_class_counts,
@@ -539,7 +539,16 @@ Source code: [GitHub](https://github.com)
 # Entry point
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
+    # Preload local models to ensure instant inference with zero first-request lag
+    local_weights = [m.path for m in MODEL_REGISTRY if m.kind == "local" and m.available]
+    if local_weights:
+        print("⚡ Preloading local YOLOv8 model weights...")
+        preload_models(local_weights)
+        print("✅ Models preloaded and ready!")
+
     app = build_app()
+    app.queue()  # Enable Gradio queue for reliable websocket & long request handling
+
     port_env = os.environ.get("PORT")
     launch_kwargs = {
         "server_name": "0.0.0.0",
