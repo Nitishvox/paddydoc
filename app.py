@@ -540,14 +540,18 @@ Source code: [GitHub](https://github.com)
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     app = build_app()
-    app.launch(
-        server_name="0.0.0.0",   # needed for HF Spaces / Docker
-        server_port=int(os.environ.get("PORT", 7860)),
-        show_error=True,
-        css=CUSTOM_CSS,
-        theme=gr.themes.Base(
+    port_env = os.environ.get("PORT")
+    launch_kwargs = {
+        "server_name": "0.0.0.0",
+        "show_error": True,
+        "css": CUSTOM_CSS,
+        "theme": gr.themes.Base(
             primary_hue="emerald",
             neutral_hue="zinc",
             font=gr.themes.GoogleFont("Inter"),
         ),
-    )
+    }
+    if port_env:
+        launch_kwargs["server_port"] = int(port_env)
+
+    app.launch(**launch_kwargs)
