@@ -17,7 +17,6 @@ license: mit
 ### Rice leaf disease detection with YOLOv8
 
 [![GitHub](https://img.shields.io/badge/GitHub-Nitishvox%2Fpaddydoc-181717?logo=github)](https://github.com/Nitishvox/paddydoc)
-[![Hugging Face Spaces](https://img.shields.io/badge/🤗%20Hugging%20Face-Gradio%20Space-ffcc4d)](https://huggingface.co/spaces)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab?logo=python&logoColor=white)](https://www.python.org/)
 [![YOLOv8](https://img.shields.io/badge/Model-YOLOv8s-16a34a)](https://github.com/ultralytics/ultralytics)
 [![License](https://img.shields.io/badge/License-MIT-f59e0b)](LICENSE)
@@ -37,6 +36,8 @@ RiceGuard is a Gradio application for detecting **Blast**, **Blight**, **Brownsp
 </div>
 
 > **Research prototype:** predictions are intended for experimentation and screening, not as a substitute for agronomist or laboratory diagnosis.
+
+> **Deployment status:** The Hugging Face Space is currently unavailable because its ZeroGPU hardware configuration requires a `@spaces.GPU` function that this CPU-compatible app does not use. Run RiceGuard locally using the setup below. The GitHub repository is the active project source.
 
 ## ✨ Features
 
@@ -123,7 +124,9 @@ cp .env.example .env
 
 For Hugging Face Spaces, add these values as **Space Secrets**, not as committed files.
 
-## 🚀 Deploy to Hugging Face Spaces
+## 🚀 Optional Hugging Face deployment
+
+The current Space configuration is not compatible with this application. If you deploy a new Space, choose **CPU Basic** hardware. Do not select ZeroGPU unless the inference code is updated to use the Hugging Face GPU decorator and execution model.
 
 ```bash
 # 1. Create a new Space at huggingface.co/new-space
