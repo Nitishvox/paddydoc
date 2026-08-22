@@ -10,12 +10,35 @@ pinned: false
 license: mit
 ---
 
-# 🌾 RiceGuard — Rice Leaf Disease Detector
+<div align="center">
 
-AI-powered rice leaf disease detection using YOLOv8 object detection.
-Detects **Blast**, **Blight**, **Brownspot**, and **Healthy** leaves in images and videos.
+# 🌾 RiceGuard
 
-## Features
+### Rice leaf disease detection with YOLOv8
+
+[![GitHub](https://img.shields.io/badge/GitHub-Nitishvox%2Fpaddydoc-181717?logo=github)](https://github.com/Nitishvox/paddydoc)
+[![Hugging Face Spaces](https://img.shields.io/badge/🤗%20Hugging%20Face-Gradio%20Space-ffcc4d)](https://huggingface.co/spaces)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab?logo=python&logoColor=white)](https://www.python.org/)
+[![YOLOv8](https://img.shields.io/badge/Model-YOLOv8s-16a34a)](https://github.com/ultralytics/ultralytics)
+[![License](https://img.shields.io/badge/License-MIT-f59e0b)](LICENSE)
+
+**Inspect a rice leaf, compare models, and review the evidence behind each prediction.**
+
+</div>
+
+RiceGuard is a Gradio application for detecting **Blast**, **Blight**, **Brownspot**, and **Healthy** rice leaves from images and videos. It combines local YOLOv8 inference with an optional Roboflow-hosted model.
+
+<div align="center">
+
+![RiceGuard annotated rice leaf predictions](project_files/val_batch0_pred.jpg)
+
+*Example validation predictions from the best local model.*
+
+</div>
+
+> **Research prototype:** predictions are intended for experimentation and screening, not as a substitute for agronomist or laboratory diagnosis.
+
+## ✨ Features
 
 | Feature | Details |
 |---|---|
@@ -26,6 +49,25 @@ Detects **Blast**, **Blight**, **Brownspot**, and **Healthy** leaves in images a
 | ⚡ Model caching | Switch models without reloading from disk |
 | 🔁 Roboflow cloud | Optional RF-DETR hosted model via API |
 
+## 🧭 Detection workflow
+
+1. Upload a leaf image, use a webcam, or provide a video clip.
+2. Select a local checkpoint or compare all local models side by side.
+3. Adjust the confidence threshold and inspect annotated detections.
+4. Use the optional cloud tab when a Roboflow API key is configured.
+
+## 📈 Evaluation snapshot
+
+The best local checkpoint is **Stage 2**, trained for 100 epochs at 832 px. Its validation mAP50 is **0.569**. The evaluation artifacts below are included in the repository so results can be inspected rather than taken on faith.
+
+<div align="center">
+
+| Training curves | Normalized confusion matrix |
+|---|---|
+| ![Stage 2 training curves](project_files/results.png) | ![Stage 2 normalized confusion matrix](project_files/confusion_matrix_normalized.png) |
+
+</div>
+
 ## Models
 
 | Model | Epochs | Resolution | mAP50 |
@@ -35,13 +77,21 @@ Detects **Blast**, **Blight**, **Brownspot**, and **Healthy** leaves in images a
 | Fine-tune (experimental) | 115 | 832 px | 0.483 |
 | Roboflow RF-DETR (cloud) | — | — | ~0.527 |
 
-> **⚠️ Known limitation:** Blight detection recall is only ~37%. The model struggles to distinguish Blight lesions from background — a documented hard problem in rice disease research.
+> **⚠️ Known limitation:** Blight detection recall is only ~37%. The model can confuse Blight lesions with background, so low-confidence or borderline predictions should be reviewed manually.
 
-## Local Setup
+## 🛠️ Local setup
+
+### Requirements
+
+- Python 3.10 or newer
+- Git LFS for downloading and working with the `.pt` checkpoints
+- Optional: a Roboflow API key for the cloud model
+
+### Install and run
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/your-username/rice_disease_detector.git
+git clone https://github.com/Nitishvox/paddydoc.git
 cd rice_disease_detector
 
 # 2. Install dependencies
@@ -55,7 +105,25 @@ python app.py
 # → Open http://localhost:7860
 ```
 
-## Deploy to Hugging Face Spaces
+The local YOLO models run without an API key. The `.env` file is optional and is only needed for the Roboflow integration.
+
+## 🔐 Environment variables
+
+Never commit `.env` or paste credentials into source files. Copy the template locally:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Required | Purpose |
+|---|---:|---|
+| `ROBOFLOW_API_KEY` | No | Enables hosted Roboflow inference |
+| `ROBOFLOW_WORKSPACE` | No | Roboflow workspace identifier |
+| `ROBOFLOW_WORKFLOW_ID` | No | Roboflow workflow identifier |
+
+For Hugging Face Spaces, add these values as **Space Secrets**, not as committed files.
+
+## 🚀 Deploy to Hugging Face Spaces
 
 ```bash
 # 1. Create a new Space at huggingface.co/new-space
@@ -72,7 +140,7 @@ git push space main
 Weights (`weights/*.pt`) are tracked via **Git LFS** so they upload correctly.
 Set your `ROBOFLOW_API_KEY` as a **Secret** in Space Settings if you want the cloud model.
 
-## Project Structure
+## 📁 Project structure
 
 ```
 rice_disease_detector/
@@ -95,11 +163,11 @@ rice_disease_detector/
 └── README.md
 ```
 
-## Training Background
+## 🧪 Training background
 
 Trained on ~7,400 labeled rice leaf images across 4 classes using YOLOv8s on Google Colab.
 Training split across sessions due to free-tier GPU limits. Full write-up in the About tab of the app.
 
-## License
+## 📄 License
 
 MIT
