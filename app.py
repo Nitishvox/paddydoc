@@ -538,19 +538,20 @@ Source code: [GitHub](https://github.com)
 
 
 # ---------------------------------------------------------------------------
-# Entry point
+# Module initialization & Hugging Face Spaces top-level demo export
 # ---------------------------------------------------------------------------
+local_weights = [m.path for m in MODEL_REGISTRY if m.kind == "local" and m.available]
+if local_weights:
+    print("[YOLO] Preloading local YOLOv8 model weights...")
+    preload_models(local_weights)
+    print("[YOLO] Models preloaded and ready!")
+
+# Expose `demo` at top-level scope (required by HF Spaces runner)
+demo = build_app()
+demo.queue()
+app = demo  # alias for backward compatibility
+
 if __name__ == "__main__":
-    # Preload local models to ensure instant inference with zero first-request lag
-    local_weights = [m.path for m in MODEL_REGISTRY if m.kind == "local" and m.available]
-    if local_weights:
-        print("[YOLO] Preloading local YOLOv8 model weights...")
-        preload_models(local_weights)
-        print("[YOLO] Models preloaded and ready!")
-
-    app = build_app()
-    app.queue()  # Enable Gradio queue for reliable websocket & long request handling
-
     port_env = os.environ.get("PORT")
     launch_kwargs = {
         "server_name": "0.0.0.0",
@@ -565,4 +566,4 @@ if __name__ == "__main__":
     if port_env:
         launch_kwargs["server_port"] = int(port_env)
 
-    app.launch(**launch_kwargs)
+    demo.launch(**launch_kwargs)
