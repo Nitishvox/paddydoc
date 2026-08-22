@@ -1,0 +1,29 @@
+# ── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.eggs/
+*.egg-info/
+dist/
+build/
+
+# ── Environment ─────────────────────────────────────────────────────────────
+.env
+*.env
+
+# ── Model weights (tracked with Git LFS — see .gitattributes) ───────────────
+# The *.pt files in weights/ ARE committed but via LFS.
+# Epoch checkpoints should never be committed.
+projec_files/*.pt
+projec_files/weights/*.pt
+project_files/*.pt
+project_files/weights/*.pt
+
+# ── Misc ────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.log
+tmp/
+.gradio/
+flagged/
+outputs/

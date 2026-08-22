@@ -1,0 +1,5 @@
+# Git LFS — track model weight files
+# This lets GitHub handle large .pt files without bloating the repo.
+# Install Git LFS: https://git-lfs.com/  then run: git lfs install
+
+*.pt filter=lfs diff=lfs merge=lfs -text
