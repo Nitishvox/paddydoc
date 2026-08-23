@@ -16,6 +16,16 @@ from typing import Optional
 import numpy as np
 from PIL import Image
 
+# ---------------------------------------------------------------------------
+# Hugging Face ZeroGPU decorator (activates Nvidia GPU dynamically on HF Spaces)
+# ---------------------------------------------------------------------------
+try:
+    import spaces
+    gpu_decorator = spaces.GPU
+except Exception:
+    def gpu_decorator(fn):
+        return fn
+
 _model_cache: dict = {}
 _cache_lock = threading.Lock()
 
@@ -55,6 +65,7 @@ def preload_models(paths: list[str]):
 # Image inference
 # ---------------------------------------------------------------------------
 
+@gpu_decorator
 def run_yolo_on_image(
     pil_image: Image.Image,
     model_path: str,
@@ -83,6 +94,7 @@ def run_yolo_on_image(
 # Video inference
 # ---------------------------------------------------------------------------
 
+@gpu_decorator
 def run_yolo_on_video(
     video_path: str,
     model_path: str,
