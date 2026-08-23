@@ -21,6 +21,10 @@ license: mit
 [![YOLOv8](https://img.shields.io/badge/Model-YOLOv8s-16a34a)](https://github.com/ultralytics/ultralytics)
 [![License](https://img.shields.io/badge/License-MIT-f59e0b)](LICENSE)
 
+## Live Demo
+
+RiceGuard is running on Hugging Face Spaces: [Open the live app](https://huggingface.co/spaces/Nitishvox/RiceGuard)
+
 **Inspect a rice leaf, compare models, and review the evidence behind each prediction.**
 
 </div>
