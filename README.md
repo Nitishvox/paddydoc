@@ -132,11 +132,14 @@ The current Space configuration is not compatible with this application. If you 
 # 1. Create a new Space at huggingface.co/new-space
 #    SDK: Gradio  |  Hardware: CPU Basic (free)
 
-# 2. Install Git LFS (one time)
+# 2. Add your SSH key at https://huggingface.co/settings/keys
+#    Key fingerprint: SHA256:1aR5prHBaFaRmaN3Kxa6g1Juf4HDKNKVfzU6usrefYc
+#
+# 3. Install Git LFS (one time)
 git lfs install
 
-# 3. Push to the Space's repo
-git remote add space https://huggingface.co/spaces/your-username/riceguard
+# 4. Push to the RiceGuard Space over SSH
+git remote add space git@hf.co:spaces/Nitishvox/RiceGuard
 git push space main
 ```
 
