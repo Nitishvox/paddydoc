@@ -151,44 +151,108 @@ def diagnose_leaf(image):
         disp = DISEASE_INFO.get(raw_cls, {}).get("display_name", raw_cls)
         formatted_probs[disp] = round(p, 4)
 
-    # Agronomic treatment report
     info = DISEASE_INFO.get(top_raw_class, {})
     disp_name = info.get("display_name", top_raw_class)
     sci_name = info.get("scientific_name", "")
     severity = info.get("severity", "Unknown")
     color = info.get("badge_color", "#10b981")
-    desc = info.get("description", "")
     symptoms = info.get("symptoms", "")
     treatment = info.get("treatment", "")
 
-    advisory_html = f"""
-    <div style="background: #1e293b; border-radius: 12px; border-left: 6px solid {color}; padding: 18px; margin-top: 12px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-            <h3 style="margin: 0; color: #f8fafc; font-size: 1.4rem;">
-                {disp_name}
-            </h3>
-            <div>
-                <span style="background: {color}; color: white; padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: 0.85rem;">
-                    Confidence: {conf:.1%}
-                </span>
-                <span style="background: rgba(255,255,255,0.1); color: #e2e8f0; padding: 4px 12px; border-radius: 999px; font-weight: 600; font-size: 0.85rem; margin-left: 6px;">
-                    Severity: {severity}
+    # -----------------------------------------------------------------------
+    # Dynamic Confidence Assessment (Avoid False Positives on Multi-Leaf/Wide Shots)
+    # -----------------------------------------------------------------------
+    CONFIDENCE_THRESHOLD = 0.60  # Below 60% indicates multi-leaf or noisy framing
+
+    if conf < CONFIDENCE_THRESHOLD:
+        advisory_html = f"""
+        <div style="background: rgba(245, 158, 11, 0.12); border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.4); border-left: 6px solid #f59e0b; padding: 18px; margin-top: 12px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <h3 style="margin: 0; color: #fbbf24; font-size: 1.3rem;">
+                    ⚠️ Low Confidence Diagnosis ({conf:.1%}) — Image Guidance Notice
+                </h3>
+                <span style="background: #f59e0b; color: #1e1b4b; padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: 0.85rem;">
+                    Tentative Guess: {disp_name} ({conf:.1%})
                 </span>
             </div>
+            <div style="background: rgba(0, 0, 0, 0.3); padding: 14px; border-radius: 8px; margin-top: 12px;">
+                <strong style="color: #fef08a; font-size: 0.95rem;">📸 Why Did This Happen?</strong>
+                <p style="margin: 6px 0 10px 0; color: #fde68a; font-size: 0.92rem; line-height: 1.5;">
+                    The model detected high uncertainty across multiple classes. This occurs when:
+                </p>
+                <ul style="margin: 0 0 12px 20px; padding: 0; color: #fde68a; font-size: 0.9rem; line-height: 1.6;">
+                    <li><strong>Multiple overlapping leaves or full crop bush:</strong> The AI was trained specifically on individual, isolated leaf blades. Wide-angle shots with dozens of leaves, stems, and soil introduce mixed textures.</li>
+                    <li><strong>Distant or out-of-focus photography:</strong> Subtle lesion patterns and vein structures cannot be resolved.</li>
+                </ul>
+                <div style="background: rgba(16, 185, 129, 0.15); border-left: 4px solid #10b981; padding: 10px 14px; border-radius: 6px;">
+                    <strong style="color: #6ee7b7;">💡 Action Required:</strong>
+                    <p style="margin: 4px 0 0 0; color: #e2e8f0; font-size: 0.92rem;">
+                        Please provide a <strong>clear close-up photo of a single affected leaf blade</strong> for a reliable, definitive diagnosis before taking any chemical action.
+                    </p>
+                </div>
+            </div>
         </div>
-        <p style="margin: 4px 0 12px 0; color: #94a3b8; font-style: italic; font-size: 0.95rem;">
-            {sci_name}
-        </p>
-        <div style="background: #0f172a; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
-            <strong style="color: #38bdf8;">Visual Symptoms:</strong>
-            <p style="margin: 4px 0 0 0; color: #cbd5e1; font-size: 0.92rem;">{symptoms}</p>
+        """
+    elif top_raw_class == "healthy":
+        advisory_html = f"""
+        <div style="background: rgba(16, 185, 129, 0.12); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.35); border-left: 6px solid #10b981; padding: 18px; margin-top: 12px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <h3 style="margin: 0; color: #6ee7b7; font-size: 1.35rem;">
+                    ✅ Healthy Rice Leaf (Disease-Free)
+                </h3>
+                <div>
+                    <span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: 0.85rem;">
+                        Confidence: {conf:.1%}
+                    </span>
+                    <span style="background: rgba(255,255,255,0.1); color: #e2e8f0; padding: 4px 12px; border-radius: 999px; font-weight: 600; font-size: 0.85rem; margin-left: 6px;">
+                        Severity: None
+                    </span>
+                </div>
+            </div>
+            <p style="margin: 4px 0 12px 0; color: #94a3b8; font-style: italic; font-size: 0.95rem;">
+                Oryza sativa (Optimal Leaf Health)
+            </p>
+            <div style="background: #0f172a; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                <strong style="color: #38bdf8;">Visual Assessment:</strong>
+                <p style="margin: 4px 0 0 0; color: #cbd5e1; font-size: 0.92rem;">{symptoms}</p>
+            </div>
+            <div style="background: #0f172a; padding: 12px; border-radius: 8px;">
+                <strong style="color: #4ade80;">Maintenance Plan:</strong>
+                <p style="margin: 4px 0 0 0; color: #e2e8f0; font-size: 0.92rem;">
+                    No chemical fungicide or bactericide treatment required. Maintain balanced nitrogen-potassium fertilizer levels and continue routine field monitoring.
+                </p>
+            </div>
         </div>
-        <div style="background: #0f172a; padding: 12px; border-radius: 8px;">
-            <strong style="color: #4ade80;">Recommended Agronomic Treatment:</strong>
-            <p style="margin: 4px 0 0 0; color: #e2e8f0; font-size: 0.92rem;">{treatment}</p>
+        """
+    else:
+        advisory_html = f"""
+        <div style="background: #1e293b; border-radius: 12px; border-left: 6px solid {color}; padding: 18px; margin-top: 12px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <h3 style="margin: 0; color: #f8fafc; font-size: 1.4rem;">
+                    {disp_name}
+                </h3>
+                <div>
+                    <span style="background: {color}; color: white; padding: 4px 12px; border-radius: 999px; font-weight: 700; font-size: 0.85rem;">
+                        Confidence: {conf:.1%}
+                    </span>
+                    <span style="background: rgba(255,255,255,0.1); color: #e2e8f0; padding: 4px 12px; border-radius: 999px; font-weight: 600; font-size: 0.85rem; margin-left: 6px;">
+                        Severity: {severity}
+                    </span>
+                </div>
+            </div>
+            <p style="margin: 4px 0 12px 0; color: #94a3b8; font-style: italic; font-size: 0.95rem;">
+                {sci_name}
+            </p>
+            <div style="background: #0f172a; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                <strong style="color: #38bdf8;">Visual Symptoms:</strong>
+                <p style="margin: 4px 0 0 0; color: #cbd5e1; font-size: 0.92rem;">{symptoms}</p>
+            </div>
+            <div style="background: #0f172a; padding: 12px; border-radius: 8px;">
+                <strong style="color: #4ade80;">Recommended Agronomic Treatment:</strong>
+                <p style="margin: 4px 0 0 0; color: #e2e8f0; font-size: 0.92rem;">{treatment}</p>
+            </div>
         </div>
-    </div>
-    """
+        """
 
     return resize_for_display(image), formatted_probs, advisory_html
 
@@ -265,8 +329,24 @@ def build_app() -> gr.Blocks:
             with gr.Tab("🔬 Leaf Diagnosis (MobileViT-S 97.4%)"):
                 gr.Markdown("""
                 > **Flagship Model**: Powered by **MobileViT-S** (Mobile Vision Transformer with Multi-Head Self-Attention).
-                > Unlike local-patch detectors, it models **global contextual dependencies across the entire leaf blade**,
-                > achieving **97.44% test accuracy** and **100% precision & recall on Bacterial Leaf Blight**.
+                > Models **global contextual dependencies across the entire leaf blade**, achieving **97.44% test accuracy** and **100% precision & recall on Bacterial Leaf Blight**.
+                """)
+
+                # Best practices banner
+                gr.HTML("""
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(52, 211, 153, 0.25); border-radius: 10px; padding: 12px 18px; margin-bottom: 14px;">
+                    <div style="font-weight: 700; color: #34d399; margin-bottom: 6px; font-size: 0.98rem; display: flex; align-items: center; gap: 6px;">
+                        <span>📸</span> Photo Guidelines for Accurate Diagnosis:
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem;">
+                        <div style="background: rgba(16, 185, 129, 0.12); padding: 10px 14px; border-radius: 8px; color: #d1fae5; border-left: 3px solid #10b981;">
+                            <strong>✅ DO:</strong> Upload a clear close-up of a <u>single leaf blade</u> centered in the frame.
+                        </div>
+                        <div style="background: rgba(239, 68, 68, 0.12); padding: 10px 14px; border-radius: 8px; color: #fecaca; border-left: 3px solid #ef4444;">
+                            <strong>❌ AVOID:</strong> Wide-angle field shots with multiple overlapping plants, grain heads, or distant crops.
+                        </div>
+                    </div>
+                </div>
                 """)
 
                 with gr.Row():
