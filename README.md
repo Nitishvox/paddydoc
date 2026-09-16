@@ -1,5 +1,5 @@
 ---
-title: RiceGuard — Rice Leaf Disease Detector
+title: RiceGuard — Rice Leaf Disease Diagnosis & Detection
 emoji: 🌾
 colorFrom: green
 colorTo: yellow
@@ -14,170 +14,118 @@ license: mit
 
 # 🌾 RiceGuard
 
-### Rice leaf disease detection with YOLOv8
+### Rice Leaf Disease Diagnosis with MobileViT-S Vision Transformer (97.4% Accuracy) & YOLOv8s Spot Detector
 
 [![GitHub](https://img.shields.io/badge/GitHub-Nitishvox%2Fpaddydoc-181717?logo=github)](https://github.com/Nitishvox/paddydoc)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab?logo=python&logoColor=white)](https://www.python.org/)
-[![YOLOv8](https://img.shields.io/badge/Model-YOLOv8s-16a34a)](https://github.com/ultralytics/ultralytics)
+[![Model](https://img.shields.io/badge/Vision_Transformer-MobileViT--S-10b981)](https://github.com/huggingface/pytorch-image-models)
+[![Model](https://img.shields.io/badge/Object_Detection-YOLOv8s-16a34a)](https://github.com/ultralytics/ultralytics)
+[![ZeroGPU](https://img.shields.io/badge/HuggingFace-ZeroGPU_Ready-blue)](https://huggingface.co/spaces)
 [![License](https://img.shields.io/badge/License-MIT-f59e0b)](LICENSE)
 
-## Live Demo
-
-RiceGuard is running on Hugging Face Spaces: [Open the live app](https://huggingface.co/spaces/Nitishvox/RiceGuard)
-
-**Inspect a rice leaf, compare models, and review the evidence behind each prediction.**
-
 </div>
 
-RiceGuard is a Gradio application for detecting **Blast**, **Blight**, **Brownspot**, and **Healthy** rice leaves from images and videos. It combines local YOLOv8 inference with an optional Roboflow-hosted model.
+---
 
-<div align="center">
+## 📌 Overview
 
-![RiceGuard annotated rice leaf predictions](project_files/val_batch0_pred.jpg)
+**RiceGuard** is a dual-engine AI web application designed for comprehensive diagnosis and localized spot detection of rice crop diseases:
 
-*Example validation predictions from the best local model.*
+1. **🔬 Whole-Leaf Disease Diagnosis (MobileViT-S Vision Transformer):**
+   - Employs **multi-head self-attention** to evaluate global leaf patterns, chlorosis gradients, and vein-delimited symptoms.
+   - Evaluated on **234 test images** across 6 distinct disease states, achieving **97.44% Test Accuracy** and **97.60% Macro F1-Score**.
+   - Achieves **100% precision and 100% recall on Bacterial Leaf Blight**, completely resolving the background-confusion challenge common to pure CNN architectures.
+   - Delivers actionable **agronomic treatment recommendations and severity ratings** for farm management.
 
-</div>
+2. **🎯 Lesion Spot Detector (YOLOv8s Multi-Stage):**
+   - Pinpoints and outlines individual lesion spots on the leaf blade with bounding box coordinates.
+   - Supports **real-time field video analysis** frame-by-frame with customizable stride.
 
-> **Research prototype:** predictions are intended for experimentation and screening, not as a substitute for agronomist or laboratory diagnosis.
+---
 
-> **Deployment status:** The Hugging Face Space is currently unavailable because its ZeroGPU hardware configuration requires a `@spaces.GPU` function that this CPU-compatible app does not use. Run RiceGuard locally using the setup below. The GitHub repository is the active project source.
+## 📊 MobileViT-S Benchmark & Test Metrics
 
-## ✨ Features
+### Test Set Performance Summary
+- **Overall Test Accuracy:** `97.44%`
+- **Macro F1-Score:** `97.60%`
+- **Weighted Average F1-Score:** `97.42%`
+- **Test Samples:** `234` images
 
-| Feature | Details |
-|---|---|
-| 📷 Image detection | Upload, webcam, or clipboard paste |
-| 🎬 Video detection | Frame-by-frame annotated video output |
-| ⚖️ Model comparison | All three models side by side |
-| 📊 Training history | Full metrics and honest limitation notes |
-| ⚡ Model caching | Switch models without reloading from disk |
-| 🔁 Roboflow cloud | Optional RF-DETR hosted model via API |
+### Detailed Per-Class Classification Report
 
-## 🧭 Detection workflow
+| Disease Class | Precision | Recall | F1-Score | Test Support | Severity Level |
+|---|---|---|---|---|---|
+| **Bacterial Leaf Blight** (*X. oryzae*) | **1.000** | **1.000** | **1.000** | 36 | High |
+| **Narrow Brown Spot** (*C. janseana*) | **1.000** | **1.000** | **1.000** | 39 | Moderate |
+| **Leaf Scald** (*M. oryzae*) | **1.000** | **1.000** | **1.000** | 34 | Medium |
+| **Healthy Leaf** (Disease-free) | **0.976** | **1.000** | **0.988** | 41 | None |
+| **Brown Spot** (*B. oryzae*) | **0.930** | **0.952** | **0.941** | 42 | Medium-High |
+| **Leaf Blast** (*M. oryzae*) | **0.950** | **0.905** | **0.927** | 42 | Critical |
+| **Macro Average** | **0.976** | **0.976** | **0.976** | 234 | — |
 
-1. Upload a leaf image, use a webcam, or provide a video clip.
-2. Select a local checkpoint or compare all local models side by side.
-3. Adjust the confidence threshold and inspect annotated detections.
-4. Use the optional cloud tab when a Roboflow API key is configured.
+---
 
-## 📈 Evaluation snapshot
+## 💡 Architectural Insights: Why MobileViT Solved the Blight Problem
 
-The best local checkpoint is **Stage 2**, trained for 100 epochs at 832 px. Its validation mAP50 is **0.569**. The evaluation artifacts below are included in the repository so results can be inspected rather than taken on faith.
+In earlier iterations using localized patch detectors (YOLOv8s), **Bacterial Leaf Blight** suffered from high false negatives (~37% recall) due to symptom confusion with natural leaf variations and background soil:
+- Traditional convolutional kernels operate within small receptive fields (e.g. 3×3 or 5×5), struggling to separate diffuse marginal wilting from background.
+- **MobileViT Solution:** Integrates Transformer blocks with **Multi-Head Self-Attention** inside MobileNet inverted residual stages. Every spatial patch attends to all other patches across the entire leaf, learning global leaf margins, vein borders, and necrosis progression.
+- This architectural shift achieved **zero false positives and zero false negatives** for Bacterial Leaf Blight on the test benchmark.
 
-<div align="center">
+---
 
-| Training curves | Normalized confusion matrix |
-|---|---|
-| ![Stage 2 training curves](project_files/results.png) | ![Stage 2 normalized confusion matrix](project_files/confusion_matrix_normalized.png) |
-
-</div>
-
-## Models
-
-| Model | Epochs | Resolution | mAP50 |
-|---|---|---|---|
-| Stage 1 (baseline) | 65 | 640 px | 0.557 |
-| **Stage 2 ★ Best** | **100** | **832 px** | **0.569** |
-| Fine-tune (experimental) | 115 | 832 px | 0.483 |
-| Roboflow RF-DETR (cloud) | — | — | ~0.527 |
-
-> **⚠️ Known limitation:** Blight detection recall is only ~37%. The model can confuse Blight lesions with background, so low-confidence or borderline predictions should be reviewed manually.
-
-## 🛠️ Local setup
-
-### Requirements
-
-- Python 3.10 or newer
-- Git LFS for downloading and working with the `.pt` checkpoints
-- Optional: a Roboflow API key for the cloud model
-
-### Install and run
+## 🚀 Quick Start (Local Setup)
 
 ```bash
-# 1. Clone the repo
+# 1. Clone the repository
 git clone https://github.com/Nitishvox/paddydoc.git
-cd rice_disease_detector
+cd paddydoc
 
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Copy env file and fill in your Roboflow key (optional)
-cp .env.example .env
-
-# 4. Run
+# 3. Run the Gradio application
 python app.py
-# → Open http://localhost:7860
 ```
+Open your browser at `http://localhost:7860`.
 
-The local YOLO models run without an API key. The `.env` file is optional and is only needed for the Roboflow integration.
+---
 
-## 🔐 Environment variables
+## 🌐 Deployment to Hugging Face Spaces
 
-Never commit `.env` or paste credentials into source files. Copy the template locally:
+1. Create a Space on [Hugging Face Spaces](https://huggingface.co/new-space) (SDK: **Gradio**).
+2. Set Space Hardware to **ZeroGPU (Free)** for dynamic Nvidia GPU acceleration.
+3. Push your repository:
+   ```bash
+   git remote add hf https://huggingface.co/spaces/Nitishvox/paddydoc
+   git push hf main
+   ```
 
-```bash
-cp .env.example .env
-```
+---
 
-| Variable | Required | Purpose |
-|---|---:|---|
-| `ROBOFLOW_API_KEY` | No | Enables hosted Roboflow inference |
-| `ROBOFLOW_WORKSPACE` | No | Roboflow workspace identifier |
-| `ROBOFLOW_WORKFLOW_ID` | No | Roboflow workflow identifier |
+## 📁 Repository Structure
 
-For Hugging Face Spaces, add these values as **Space Secrets**, not as committed files.
-
-## 🚀 Optional Hugging Face deployment
-
-The current Space configuration is not compatible with this application. If you deploy a new Space, choose **CPU Basic** hardware. Do not select ZeroGPU unless the inference code is updated to use the Hugging Face GPU decorator and execution model.
-
-```bash
-# 1. Create a new Space at huggingface.co/new-space
-#    SDK: Gradio  |  Hardware: CPU Basic (free)
-
-# 2. Add your SSH key at https://huggingface.co/settings/keys
-#    Key fingerprint: SHA256:1aR5prHBaFaRmaN3Kxa6g1Juf4HDKNKVfzU6usrefYc
-#
-# 3. Install Git LFS (one time)
-git lfs install
-
-# 4. Push to the RiceGuard Space over SSH
-git remote add space git@hf.co:spaces/Nitishvox/RiceGuard
-git push space main
-```
-
-Weights (`weights/*.pt`) are tracked via **Git LFS** so they upload correctly.
-Set your `ROBOFLOW_API_KEY` as a **Secret** in Space Settings if you want the cloud model.
-
-## 📁 Project structure
-
-```
+```text
 rice_disease_detector/
-├── app.py                  # Gradio UI — entry point
-├── config.py               # Model registry, paths, env config
+├── app.py                      # Main Gradio application (4 interactive tabs)
+├── config.py                   # Central configuration & disease knowledge base
 ├── models/
-│   ├── yolo_handler.py     # Local YOLOv8 inference + caching
-│   └── roboflow_handler.py # Roboflow Workflows API + retry logic
+│   ├── classifier_handler.py   # MobileViT-S Vision Transformer inference
+│   └── yolo_handler.py         # YOLOv8s spot detection & video processor
 ├── utils/
-│   └── image_utils.py      # Shared helpers (resize, table format)
+│   └── image_utils.py          # Image resizing, table formatting & draw helpers
 ├── weights/
-│   ├── stage1_best.pt      # Stage 1 checkpoint (21.5 MB)
-│   ├── stage2_best.pt      # Stage 2 checkpoint (21.5 MB)
-│   └── finetune_best.pt    # Fine-tune checkpoint (optional)
-├── projec_files/           # Stage 1 training artifacts (curves, CSV)
-├── project_files/          # Stage 2 training artifacts (curves, CSV)
-├── requirements.txt
-├── .env.example
-├── .gitattributes          # Git LFS config for *.pt files
-└── README.md
+│   ├── rice_leaf_final_model.pt # MobileViT-S weights (97.4% accuracy)
+│   ├── stage1_best.pt          # YOLOv8s Stage 1 weights (640px)
+│   └── stage2_best.pt          # YOLOv8s Stage 2 weights (832px)
+├── assets/
+│   └── mobilevit_confusion_matrix.png # Test set confusion matrix plot
+├── requirements.txt            # Pinned dependencies (timm, ultralytics, gradio, etc.)
+└── README.md                   # Project documentation
 ```
 
-## 🧪 Training background
+---
 
-Trained on ~7,400 labeled rice leaf images across 4 classes using YOLOv8s on Google Colab.
-Training split across sessions due to free-tier GPU limits. Full write-up in the About tab of the app.
+## 📜 License
 
-## 📄 License
-
-MIT
+Distributed under the [MIT License](LICENSE).
